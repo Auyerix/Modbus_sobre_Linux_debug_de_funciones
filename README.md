@@ -1,4 +1,8 @@
-# Trabajo Práctico Número 4 (a partir del TP2)
+# Proyecto Modbus TCP
+# Se porta el proyecto en STM32 Nucleo F429ZI a Linux para su depuración y ajuste
+# No se porta TCP y solo la estructura básica de funciones para las pruebas mediante
+# vectores de prueba
+# 19-08-24
 
 ## Uso del repositorio
 
