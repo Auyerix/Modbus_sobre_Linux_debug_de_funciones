@@ -1,6 +1,10 @@
 #include "modbus.h"
 #include <string.h>
 
+//incluidos para el printf
+#include <stdio.h>
+#include <stdint.h>
+
 //--------for reading commands-----------------//
 extern void read_coils(char *repl_buf, uint16_t address, uint16_t quantity);
 extern void read_discrete(char *repl_buf, uint16_t address, uint16_t quantity);
@@ -44,10 +48,13 @@ uint16_t mb_process(char *mb_repl_buf, char *mb_req_buf, uint16_t req_buf_len) {
 		pduLen = mb_process_err(mb_repl_buf, fn, MB_EXCEPTION_FN_UNSUPPORTED);
 		break;
 	}
-
+	// acá tomo el valor del pdulen le sumo 1 para incluir la cuenta de la dirección en el
+	//[6] y lo separo en dos posiciones [4] y [5]
 	mb_repl_buf[MB_MBAP_LEN_H] = (pduLen + 1) >> 8;
 	mb_repl_buf[MB_MBAP_LEN_L] = (pduLen + 1) & 0xff;
 
+	//y retorno lo que será el buf_len que suma la base de 7 bytes de MB_MBAP_SIZE que es 7
+	//con lo calculado pduLen que es el largo del mensaje devuelto por las funciones
 	return (pduLen + MB_MBAP_SIZE);
 }
 
@@ -56,16 +63,20 @@ static uint16_t mb_process_pdu_read_fn(char *mb_repl_buf, char *mb_req_buf, uint
 	uint16_t start_address = mb_req_buf[MB_PDU_R_ST_ADDR_L] + (mb_req_buf[MB_PDU_R_ST_ADDR_H] << 8);
 	uint16_t quantity = mb_req_buf[MB_PDU_R_QUANTITY_L] + (mb_req_buf[MB_PDU_R_QUANTITY_H] << 8);
 
+	//imprimo la funciòn, la direcciòn de comienzo y la cantidad
+	printf("fn = %d start_address = %d  quantity = %d\n", fn, start_address, quantity);
+
 	if (mb_process_start_address(fn, start_address, quantity) != MB_EXCEPTION_OK) {
+		printf("paso por error \n");
 		return mb_process_err(mb_repl_buf, fn, MB_EXCEPTION_DATA_ADDR);
 	} else { // form PDU content
 		mb_repl_buf[MB_PDU_FN] = fn;
 		mb_repl_buf[MB_PDU_REPL_N] = mb_pdu_calculate_N(fn, quantity);
 
-//		switch (fn) {
-//		case MB_FN_READ_COILS:
-//			read_coils(mb_req_buf, start_address, quantity);
-//			break;
+		switch (fn) {
+		case MB_FN_READ_COILS:
+			read_coils(mb_repl_buf, start_address, quantity);
+			break;
 //		case MB_FN_READ_DISCRETE:
 //			read_discrete(mb_req_buf, start_address, quantity);
 //			break;
@@ -75,7 +86,7 @@ static uint16_t mb_process_pdu_read_fn(char *mb_repl_buf, char *mb_req_buf, uint
 //		case MB_FN_READ_INPUT:
 //			read_inputs(mb_req_buf, start_address, quantity);
 //			break;
-//		}
+		}
 
 	}
 	return mb_pdu_calculate_N(fn, quantity) + 2; // returns PDU size where +2 are N and fn
@@ -176,4 +187,20 @@ static uint16_t mb_pdu_calculate_N(uint16_t fn, uint16_t quantity) {
 	default:
 		return 0;
 	}
+}
+
+void read_coils(char *repl_buf, uint16_t address, uint16_t quantity){
+    uint16_t byte_count = (quantity + 7) / 8;  // Cantidad de bytes necesarios
+    //memset(response_buffer, 0, 256);            // Inicializar TODO el buffer de respuesta a 0
+    //memset(response_buffer, 0, byte_count);    // Inicializar el buffer de respuesta a 0
+    
+    for (uint16_t i = 0; i < quantity; i++) {
+        uint16_t coil_index = address + i;
+        if (coil_status[coil_index]) {
+            repl_buf[(i / 8) +9 ] |= (1 << (i % 8));  // Establecer el bit correspondiente si la coil está ON
+													//y es mas 9 para dar lugar a fn y cantidad de bytes en
+													//[7] y [8]
+        }
+    }
+
 }

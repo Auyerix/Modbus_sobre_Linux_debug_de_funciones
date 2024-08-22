@@ -36,11 +36,11 @@
 #define MB_COILS_ST			(0)
 #define MB_COILS_Q			(0xFF)
 #define MB_DISCRETE_ST	(MB_COILS_ST + MB_COILS_Q)
-#define MB_DISCRETE_Q		(0)
+#define MB_DISCRETE_Q		(0xFF) //(0)
 #define MB_HOLDING_ST 	(MB_DISCRETE_ST + MB_DISCRETE_Q)
 #define MB_HOLDING_Q		(4)
 #define MB_INPUT_ST			(MB_HOLDING_ST + MB_HOLDING_Q)
-#define MB_INPUT_Q			(0)
+#define MB_INPUT_Q			(4) //(0)
 #define MB_MEMORY_SIZE	(MB_COILS_Q + MB_DISCRETE_Q + MB_HOLDING_Q + MB_INPUT_Q)
 // -------------------------- CONFIG END-------------------------------//
 
@@ -61,4 +61,7 @@
 
 // process request and returns ADU size of reply
 uint16_t mb_process(char *mb_repl_buf, char *mb_req_buf, uint16_t req_buf_len);
+
+extern uint8_t coil_status[256];
+
 #endif /* INC_MODBUS_H_ */
