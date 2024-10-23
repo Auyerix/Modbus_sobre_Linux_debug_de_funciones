@@ -78,13 +78,13 @@ static uint16_t mb_process_pdu_read_fn(char *mb_repl_buf, char *mb_req_buf, uint
 			read_coils(mb_repl_buf, start_address, quantity);
 			break;
 //		case MB_FN_READ_DISCRETE:
-//			read_discrete(mb_req_buf, start_address, quantity);
+//			read_discrete(mb_repl_buf, start_address, quantity);
 //			break;
-//		case MB_FN_READ_HOLDING:
-//			read_holding(mb_req_buf, start_address, quantity);
-//			break;
+		case MB_FN_READ_HOLDING:
+			read_holding(mb_repl_buf, start_address, quantity); //Ojo tenía mb_req_buf!!!
+			break;
 //		case MB_FN_READ_INPUT:
-//			read_inputs(mb_req_buf, start_address, quantity);
+//			read_inputs(mb_repl_buf, start_address, quantity);
 //			break;
 		}
 
@@ -122,6 +122,9 @@ static void mb_mbap_copy(char *mb_repl_buf, char *mb_req_buf) {
 	mb_repl_buf[MB_MBAP_CLIENT_ID] = mb_req_buf[MB_MBAP_CLIENT_ID];
 }
 
+//esta función verifica que las cantidades que estoy pidiendo están disponibles en el sistema
+// la configuración del sistema debería estar hardcodeada en por ejempl MB_COIL_Q que indicaría
+//la cantidad de coils físicas disponibles.
 static uint8_t mb_process_start_address(uint16_t fn, uint16_t start_address, uint16_t quantity) {
 	uint8_t exception_code = MB_EXCEPTION_OK;
 	switch (fn) {
@@ -203,4 +206,25 @@ void read_coils(char *repl_buf, uint16_t address, uint16_t quantity){
         }
     }
 
+}
+
+//22/10/24 acá estoy trabajando con la misma lógica que las coils ahora leo registros funciona
+//ahora ver que tantos puedo leer
+// y activar REad Discrete!!!
+void read_holding(char *repl_buf, uint16_t address, uint16_t quantity) {
+    // Cantidad de bytes necesarios: cada registro holding es de 2 bytes (16 bits)
+    uint16_t byte_count = quantity * 2;
+
+    // Coloca la cantidad de bytes en el byte [8] del buffer de respuesta (luego de la cabecera)
+    repl_buf[8] = byte_count;
+
+    // Copiar los valores de los registros holding solicitados
+    for (uint16_t i = 0; i < quantity; i++) {
+        uint16_t reg_index = address + i;
+        uint16_t holding_value = holding_registers[reg_index];  // Valor del registro holding
+
+        // Poner los 2 bytes del registro holding en el buffer de respuesta
+        repl_buf[9 + (i * 2)]     = (holding_value >> 8) & 0xFF;  // Byte alto
+        repl_buf[9 + (i * 2) + 1] = holding_value & 0xFF;         // Byte bajo
+    }
 }
