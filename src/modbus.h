@@ -63,6 +63,7 @@
 uint16_t mb_process(char *mb_repl_buf, char *mb_req_buf, uint16_t req_buf_len);
 
 extern uint8_t coil_status[256];
+extern uint8_t discrete_status[256];
 extern uint16_t holding_registers[10];
 
 #endif /* INC_MODBUS_H_ */

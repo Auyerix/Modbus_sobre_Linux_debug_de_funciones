@@ -29,12 +29,21 @@
 //Prueba función leer Coils
 //uint8_t mb_req_buf[] = {0xAA,0x55,0x00,0x00,0x00,0x06,0x2A,0x01,0x00,0x00,0x00,0x4};
 //Prueba función leer holding
-uint8_t mb_req_buf[] = {0xAA,0x55,0x00,0x00,0x00,0x06,0x2A,0x03,0x00,0x00,0x00,0x3};
+//uint8_t mb_req_buf[] = {0xAA,0x55,0x00,0x00,0x00,0x06,0x2A,0x03,0x00,0x00,0x00,0x3};
+//Prueba función leer discrete
+//uint8_t mb_req_buf[] = {0xAA,0x55,0x00,0x00,0x00,0x06,0x2A,0x02,0x00,0x00,0x00,0x4};
+//Prueba función para escribir un coil
+//uint8_t mb_req_buf[] = {0xAA,0x55,0x00,0x00,0x00,0x06,0x2A,0x05,0x00,0x01,0xFF,0x00};
+//Prueba función para escribir un registro
+uint8_t mb_req_buf[] = {0xAA,0x55,0x00,0x00,0x00,0x06,0x2A,0x06,0x00,0x01,0x55,0x80};
+
 
 uint8_t mb_repl_buf[MB_ADU_MAXSIZE];
 
 // Supongamos que este es el estado de las coils (256 coils, todas inicializadas en OFF).
 uint8_t coil_status[256] = {0};
+// Estado de las discretes (entradas)
+uint8_t discrete_status[256] = {0};
 
 // supongamos ahora holdings registers de 16 bits
 uint16_t holding_registers[10];
@@ -42,13 +51,23 @@ uint16_t holding_registers[10];
 int main() {
 
     // Configuramos algunos estados de coils para el ejemplo
-    coil_status[0] = 1;   // Coil 0 ON
+    coil_status[0] = 0;   // Coil 0 ON
     coil_status[1] = 0;   // Coil 1 OFF
-    coil_status[2] = 1;   // Coil 2 ON
+    coil_status[2] = 0;   // Coil 2 ON
     coil_status[3] = 1;   // Coil 2 ON
     coil_status[7] = 1;   // Coil 7 ON
     coil_status[8] = 1;   // Coil 8 ON
     coil_status[15] = 1;  // Coil 15 ON
+
+    // Configuramos algunos estados de discrete para el ejemplo
+    discrete_status[0] = 0;   // Coil 0 ON
+    discrete_status[1] = 0;   // Coil 1 OFF
+    discrete_status[2] = 1;   // Coil 2 ON
+    discrete_status[3] = 1;   // Coil 2 ON
+    discrete_status[7] = 1;   // Coil 7 ON
+    discrete_status[8] = 1;   // Coil 8 ON
+    discrete_status[15] = 1;  // Coil 15 ON
+
     // Configuramos algunos estados de holding registers
     holding_registers[0] = 0;
     holding_registers[1] = 1;
@@ -61,6 +80,15 @@ int main() {
     for(int i = 0; i < 15; i++) {
         printf("request[%d] = 0x%X  ", i, mb_req_buf[i]);
         printf("replay[%d] = 0x%X\n", i, mb_repl_buf[i]);
+    }
+
+    for(int i = 0; i < 15; i++) {
+        printf("coil_status[%d] = 0x%X\n ", i, coil_status[i]);
+
+    }
+        for(int i = 0; i < 10; i++) {
+        printf("holding_registers[%d] = 0x%X\n ", i, holding_registers[i]);
+
     }
 
     //printf("Hello World");
