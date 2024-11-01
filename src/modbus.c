@@ -15,7 +15,7 @@ extern void write_single_coil(uint16_t address, uint16_t val);
 extern void write_single_holding(uint16_t address, uint16_t val);
 
 static uint16_t mb_process_pdu_read_fn(char *mb_repl_buf, char *mb_req_buf, uint16_t req_buf_len);
-//cambié char por uint8_t porque me daba problemas con valores mas grandes que 0x80 en el byte bajo
+//cambié char por uint8_t porque me daba problemas con valores mas grandes que 0x80 en el byte bajo <--- OJO en todas las funciones
 static uint16_t mb_process_pdu_write_single_fn(uint8_t *mb_repl_buf, uint8_t *mb_req_buf, uint16_t req_buf_len);
 static uint16_t mb_process_err(char *mb_repl_buf, uint8_t fn, uint16_t exceptionCode);
 static uint8_t mb_process_start_address(uint16_t fn, uint16_t start_address, uint16_t quantity);
@@ -84,9 +84,9 @@ static uint16_t mb_process_pdu_read_fn(char *mb_repl_buf, char *mb_req_buf, uint
 		case MB_FN_READ_HOLDING:
 			read_holding(mb_repl_buf, start_address, quantity); //Ojo tenía mb_req_buf!!!
 			break;
-//		case MB_FN_READ_INPUT:
-//			read_inputs(mb_repl_buf, start_address, quantity);
-//			break;
+		case MB_FN_READ_INPUT:
+			read_inputs(mb_repl_buf, start_address, quantity);
+			break;
 		}
 
 	}
@@ -230,6 +230,26 @@ void read_discrete(char *repl_buf, uint16_t address, uint16_t quantity){
     }
 
 }
+
+//Lectura de input
+void read_inputs(char *repl_buf, uint16_t address, uint16_t quantity) {
+    // Cantidad de bytes necesarios: cada registro holding es de 2 bytes (16 bits)
+    uint16_t byte_count = quantity * 2;
+
+    // Coloca la cantidad de bytes en el byte [8] del buffer de respuesta (luego de la cabecera)
+    repl_buf[8] = byte_count;
+
+    // Copiar los valores de los registros holding solicitados
+    for (uint16_t i = 0; i < quantity; i++) {
+        uint16_t inputs_index = address + i;
+        uint16_t inputs_value = input_status[inputs_index];  // Valor del registro holding
+
+        // Poner los 2 bytes del registro holding en el buffer de respuesta
+        repl_buf[9 + (i * 2)]     = (inputs_value >> 8) & 0xFF;  // Byte alto
+        repl_buf[9 + (i * 2) + 1] = inputs_value & 0xFF;         // Byte bajo
+    }
+}
+
 
 //Lectura de holdings
 void read_holding(char *repl_buf, uint16_t address, uint16_t quantity) {
